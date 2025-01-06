@@ -21,3 +21,9 @@ cd DockerSpeedTest
 docker build -t speedtest-web-enhanced .
 docker run -d -p 8080:80 speedtest-web-enhanced
 ```
+
+or if you want to pull straight from ghcr:
+```
+docker pull ghcr.io/zephrfish/dockerspeedtest:latest
+docker run -d -p 8080:80 dockerspeedtest
+```
