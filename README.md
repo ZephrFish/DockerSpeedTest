@@ -13,3 +13,11 @@ echo "<br>" >> /var/www/html/index.html
 /usr/local/bin/speedtest --simple >>  /var/www/html/index.html
 echo "</p><br>" >> /var/www/html/index.html
 ```
+
+## Instructions
+```
+git clone https://github.com/ZephrFish/DockerSpeedTest/
+cd DockerSpeedTest
+docker build -t speedtest-web-enhanced .
+docker run -d -p 8080:80 speedtest-web-enhanced
+```
