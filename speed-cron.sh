@@ -1,7 +1,7 @@
 #!/bin/bash
 # speed-cron.sh
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
-RESULT=$(/usr/local/bin/speedtest --simple | awk -F': ' '{print $2}' | paste -sd "," -)
+RESULT=$(/usr/bin/speedtest --simple | awk -F': ' '{print $2}' | paste -sd "," -)
 PING=$(echo "$RESULT" | cut -d, -f1)
 DOWNLOAD=$(echo "$RESULT" | cut -d, -f2)
 UPLOAD=$(echo "$RESULT" | cut -d, -f3)
