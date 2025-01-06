@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedtest Monitor</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <h1>Internet Speed Test Results</h1>
+    <table id="resultsTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Ping (ms)</th>
+                <th>Download (Mbps)</th>
+                <th>Upload (Mbps)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dynamic data will be injected here -->
+        </tbody>
+    </table>
+
+    <canvas id="speedChart" width="400" height="200"></canvas>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#resultsTable').DataTable({
+                order: [[1, 'desc']],
+                paging: true,
+                searching: true
+            });
+        });
+
+        // Fetch data for the graph
+        fetch('/speedtest_results.json')
+            .then(response => response.json())
+            .then(data => {
+                const labels = data.map(entry => entry.date);
+                const downloadData = data.map(entry => entry.download);
+                const uploadData = data.map(entry => entry.upload);
+
+                const ctx = document.getElementById('speedChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Download Speed (Mbps)',
+                                data: downloadData,
+                                borderColor: 'blue',
+                                fill: false,
+                            },
+                            {
+                                label: 'Upload Speed (Mbps)',
+                                data: uploadData,
+                                borderColor: 'green',
+                                fill: false,
+                            }
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Speed (Mbps)',
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
