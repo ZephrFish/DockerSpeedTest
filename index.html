@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Speedtest Monitor</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
 </head>
 <body>
     <h1>Internet Speed Test Results</h1>
+    <canvas id="speedChart" width="400" height="200"></canvas>
     <table id="resultsTable" class="display" style="width:100%">
         <thead>
             <tr>
@@ -22,16 +26,16 @@
         </tbody>
     </table>
 
-    <canvas id="speedChart" width="400" height="200"></canvas>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         function fetchAndRenderData() {
             fetch(`/speedtest_results.json?timestamp=${new Date().getTime()}`)
                 .then(response => response.json())
                 .then(data => {
+                    // Ensure data is sorted by date
+                    data.sort((a, b) => new Date(a.date.replace(' ', 'T')) - new Date(b.date.replace(' ', 'T')));
+
                     // Populate the DataTable
                     const tableBody = document.querySelector('#resultsTable tbody');
                     tableBody.innerHTML = ''; // Clear existing rows
@@ -39,9 +43,9 @@
                         const row = `
                             <tr>
                                 <td>${entry.date}</td>
-                                <td>${entry.ping}</td>
-                                <td>${entry.download}</td>
-                                <td>${entry.upload}</td>
+                                <td>${entry.ping.toFixed(3)}</td>
+                                <td>${entry.download.toFixed(2)}</td>
+                                <td>${entry.upload.toFixed(2)}</td>
                             </tr>`;
                         tableBody.innerHTML += row;
                     });
@@ -57,14 +61,18 @@
                     });
 
                     // Update the Chart
-                    const labels = data.map(entry => entry.date);
-                    const downloadData = data.map(entry => parseFloat(entry.download));
-                    const uploadData = data.map(entry => parseFloat(entry.upload));
+                    const labels = data.map(entry => new Date(entry.date.replace(' ', 'T'))); // Convert to Date
+                    const downloadData = data.map(entry => entry.download);
+                    const uploadData = data.map(entry => entry.upload);
 
                     const ctx = document.getElementById('speedChart').getContext('2d');
-                    if (window.speedChart) {
-                        window.speedChart.destroy(); // Destroy existing chart before re-rendering
+
+                    // Check if the chart exists before destroying it
+                    if (window.speedChart && typeof window.speedChart.destroy === 'function') {
+                        window.speedChart.destroy();
                     }
+
+                    // Create the new Chart.js instance
                     window.speedChart = new Chart(ctx, {
                         type: 'line',
                         data: {
@@ -74,12 +82,14 @@
                                     label: 'Download Speed (Mbps)',
                                     data: downloadData,
                                     borderColor: 'blue',
+                                    tension: 0.4,
                                     fill: false
                                 },
                                 {
                                     label: 'Upload Speed (Mbps)',
                                     data: uploadData,
                                     borderColor: 'green',
+                                    tension: 0.4,
                                     fill: false
                                 }
                             ]
@@ -90,7 +100,15 @@
                                 x: {
                                     type: 'time',
                                     time: {
-                                        unit: 'minute'
+                                        tooltipFormat: 'yyyy-MM-dd HH:mm:ss', // Luxon format
+                                        displayFormats: {
+                                            minute: 'MMM dd, HH:mm',
+                                            hour: 'MMM dd, HH:mm'
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Time'
                                     }
                                 },
                                 y: {
@@ -104,7 +122,10 @@
                         }
                     });
                 })
-                .catch(error => console.error('Error fetching data:', error));
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    alert('Failed to fetch data. Please check your connection or try again later.');
+                });
         }
 
         // Fetch data every 5 minutes
