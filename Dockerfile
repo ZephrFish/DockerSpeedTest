@@ -22,7 +22,7 @@ RUN echo "server.document-root = \"/var/www/html\"" > /etc/lighttpd/lighttpd.con
     echo "dir-listing.activate = \"enable\"" >> /etc/lighttpd/lighttpd.conf && \
     echo "server.port = 80" >> /etc/lighttpd/lighttpd.conf
 
-RUN echo "*/5 * * * * /usr/local/bin/speed-cron.sh" > /etc/crontabs/root
+RUN echo "0 * * * * /usr/local/bin/speed-cron.sh" > /etc/crontabs/root
 
 EXPOSE 80
 
